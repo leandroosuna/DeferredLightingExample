@@ -100,9 +100,8 @@ float4 AmbientLightPS(PVSO input) : COLOR
     
     float4 normalRaw = tex2D(normalMapSampler, input.TexCoord);
     
-    if (normalRaw.r == 0.0 && normalRaw.b == 0.0 && normalRaw.g == 0.0)
+    if (KD == 0)
     {
-        //return float4(lightDiffuseColor * 0.25, 1);
         return float4(1,1,1, 1);
     }
     
@@ -147,9 +146,8 @@ float4 PointLightPS(PVSO input) : COLOR
     
     float4 normalRaw = tex2D(normalMapSampler, sceneCoord);
     
-    if (normalRaw.r == 0.0 && normalRaw.b == 0.0 && normalRaw.g == 0.0)
+    if (KD == 0)
     {
-        //return float4(lightDiffuseColor * 0.25, 1);
         return float4(1,1,1, 1);
     }
     
@@ -185,9 +183,13 @@ PSO PointLightBPS(PVSO input)
 
 float4 IntegratePS(PVSO input) : COLOR
 {
-    float3 color = tex2D(colorSampler, input.TexCoord).rgb;
+    float4 colorRaw = tex2D(colorSampler, input.TexCoord);
+    float filter = colorRaw.a;
+    float3 color = colorRaw.rgb;
     float3 light = tex2D(lightMapSampler, input.TexCoord).rgb;
-
+   
+    if(filter == 0)
+        return float4(color,1);
     return float4(color*light, 1);
     
 }

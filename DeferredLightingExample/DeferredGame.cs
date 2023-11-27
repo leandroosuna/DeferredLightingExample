@@ -348,7 +348,7 @@ namespace DeferredLightingExample
                 offsetR.Add((int)random.NextInt64(-300, 300));
                 offsetT.Add((float) random.NextDouble() * 50);
 
-                var randomColor = new Vector3(random.NextInt64(0,2), random.NextInt64(0, 2), random.NextInt64(0, 2));
+                var randomColor = new Vector3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble());
                 while(randomColor == Vector3.Zero || randomColor ==  Vector3.One)
                 {
                     randomColor = new Vector3(random.NextInt64(0, 2), random.NextInt64(0, 2), random.NextInt64(0, 2));

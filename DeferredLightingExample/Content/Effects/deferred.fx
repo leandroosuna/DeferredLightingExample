@@ -27,6 +27,12 @@ struct PSO
     float4 blurH : COLOR1;
     float4 blurV : COLOR2;
 };
+static const int kernel_r = 6;
+static const int kernel_size = 13;
+static const float Kernel[kernel_size] =
+{
+    0.002216, 0.008764, 0.026995, 0.064759, 0.120985, 0.176033, 0.199471, 0.176033, 0.120985, 0.064759, 0.026995, 0.008764, 0.002216,
+};
 
 texture colorMap;
 sampler colorSampler = sampler_state
@@ -71,6 +77,35 @@ sampler lightMapSampler = sampler_state
     Mipfilter = LINEAR;
 };
 
+texture bloomFilter;
+sampler bloomFilterSampler = sampler_state
+{
+    Texture = (bloomFilter);
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MagFilter = POINT;
+    MinFilter = POINT;
+    Mipfilter = POINT;
+};
+texture blurH;
+sampler2D blurHSampler = sampler_state
+{
+    Texture = (blurH);
+    MagFilter = Linear;
+    MinFilter = Linear;
+    AddressU = Clamp;
+    AddressV = Clamp;
+};
+texture blurV;
+sampler2D blurVSampler = sampler_state
+{
+    Texture = (blurV);
+    MagFilter = Linear;
+    MinFilter = Linear;
+    AddressU = Clamp;
+    AddressV = Clamp;
+};
+
 PVSO PostVS(PVSI input)
 {
     PVSO output;
@@ -92,7 +127,7 @@ PVSO PointLightVS(PVSI input)
 }
 
 
-float4 AmbientLightPS(PVSO input) : COLOR
+float4 AmbientLight(PVSO input)
 {
     float4 colorRaw = tex2D(colorSampler, input.TexCoord);
     float3 color = colorRaw.rgb;
@@ -102,7 +137,7 @@ float4 AmbientLightPS(PVSO input) : COLOR
     
     if (KD == 0)
     {
-        return float4(1,1,1, 1);
+        return float4(1, 1, 1, 1);
     }
     
     float KS = normalRaw.a;
@@ -114,12 +149,30 @@ float4 AmbientLightPS(PVSO input) : COLOR
     
     return float4(getPixelAmbient(worldPos, normal, KD, KS, shininess), 1);
 }
-static const int kernel_r = 6;
-static const int kernel_size = 13;
-static const float Kernel[kernel_size] =
+
+PSO AmbientAndBlurPS(PVSO input) 
 {
-    0.002216, 0.008764, 0.026995, 0.064759, 0.120985, 0.176033, 0.199471, 0.176033, 0.120985, 0.064759, 0.026995, 0.008764, 0.002216,
-};
+    PSO output;
+    output.color = AmbientLight(input);
+    
+    float3 hColor = float3(0, 0, 0);
+    float3 vColor = float3(0, 0, 0);
+    
+    
+    for (int i = 0; i < kernel_size; i++)
+    {
+        float2 scaledTextureCoordinatesH = input.TexCoord + float2((float) (i - kernel_r) / screenSize.x, 0);
+        float2 scaledTextureCoordinatesV = input.TexCoord + float2(0, (float) (i - kernel_r) / screenSize.y);
+        hColor += tex2D(bloomFilterSampler, scaledTextureCoordinatesH).rgb * Kernel[i];
+        vColor += tex2D(bloomFilterSampler, scaledTextureCoordinatesV).rgb * Kernel[i];
+    }
+    
+    output.blurH = float4(hColor, 1);
+    output.blurV = float4(vColor, 1);
+    
+    return output;
+}
+
 
 float sqr(float x)
 {
@@ -180,18 +233,25 @@ PSO PointLightBPS(PVSO input)
     output.blurV = float4(0, 0, 0, 1);
     return output;
 }
-
+float4 processBloom(float3 color, float filter, float3 light, float2 texCoord)
+{
+    float3 blurHColor = tex2D(blurHSampler, texCoord).rgb;
+    float3 blurVColor = tex2D(blurVSampler, texCoord).rgb;
+    
+    float attenuation = 0.8;
+    float lightPower = .7;
+    
+    if (filter == 0)
+        return float4(color * attenuation + blurHColor * lightPower + blurVColor * lightPower, 1);
+    else
+        return float4(color * attenuation * light + blurHColor * lightPower + blurVColor * lightPower, 1);
+}
 float4 IntegratePS(PVSO input) : COLOR
 {
-    float4 colorRaw = tex2D(colorSampler, input.TexCoord);
-    float filter = colorRaw.a;
-    float3 color = colorRaw.rgb;
-    float3 light = tex2D(lightMapSampler, input.TexCoord).rgb;
+    float4 color = tex2D(colorSampler, input.TexCoord);
+    float4 light = tex2D(lightMapSampler, input.TexCoord);
    
-    if(filter == 0)
-        return float4(color,1);
-    return float4(color*light, 1);
-    
+    return processBloom(color.rgb, color.a, light.rgb, input.TexCoord);
 }
 
 technique point_light
@@ -207,7 +267,7 @@ technique ambient_light
     pass P0
     {
         VertexShader = compile VS_SHADERMODEL PostVS();
-        PixelShader = compile PS_SHADERMODEL AmbientLightPS();
+        PixelShader = compile PS_SHADERMODEL AmbientAndBlurPS();
     }
 }
 technique integrate

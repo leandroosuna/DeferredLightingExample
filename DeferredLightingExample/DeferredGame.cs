@@ -26,6 +26,7 @@ namespace DeferredLightingExample
         public int screenHeight;
 
         Model sphere, cube, plane, lightSphere, lightCone;
+        Texture2D planeTex;
 
         public Camera camera;
         public FullScreenQuad fullScreenQuad;
@@ -35,11 +36,14 @@ namespace DeferredLightingExample
         RenderTarget2D colorTarget;
         RenderTarget2D normalTarget;
         RenderTarget2D positionTarget;
+        RenderTarget2D bloomFilterTarget;
+        RenderTarget2D blurHTarget;
+        RenderTarget2D blurVTarget;
         RenderTarget2D lightTarget;
 
         static DeferredGame instance;
         
-        int maxPointLights = 500;
+        int maxPointLights = 100;
 
         public DeferredGame()
         {
@@ -55,9 +59,8 @@ namespace DeferredLightingExample
             Window.IsBorderless = true;
             Graphics.PreferredBackBufferWidth = screenWidth;
             Graphics.PreferredBackBufferHeight = screenHeight;
-            Window.Position = new Point(screenWidth / 2 - Graphics.PreferredBackBufferWidth / 2, screenHeight / 2 - Graphics.PreferredBackBufferHeight / 2);
-            Graphics.ApplyChanges();
-
+            Window.Position = new Point(320, 180);
+            
             IsFixedTimeStep = false;
             Graphics.SynchronizeWithVerticalRetrace = true;
             Graphics.ApplyChanges();
@@ -95,6 +98,7 @@ namespace DeferredLightingExample
             lightSphere = Content.Load<Model>(ContentFolder3D + "Basic/lightSphere");
             lightCone = Content.Load<Model>(ContentFolder3D + "Basic/cone");
 
+            planeTex = Content.Load<Texture2D>(ContentFolder3D + "Basic/tex/planeTex");
             // Assign the correct effect for each model
             AssignEffect(sphere, basicModelEffect.effect);
             AssignEffect(cube, basicModelEffect.effect);
@@ -174,7 +178,7 @@ namespace DeferredLightingExample
             /// the shader technique used must have "AlphaBlendEnable = FALSE;"
             /// GraphicsProfile.HiDef should be used, as well as shader model 5.0
             /// 
-            GraphicsDevice.SetRenderTargets(colorTarget, normalTarget, positionTarget);
+            GraphicsDevice.SetRenderTargets(colorTarget, normalTarget, positionTarget, bloomFilterTarget);
             GraphicsDevice.BlendState = BlendState.NonPremultiplied;
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
@@ -193,14 +197,14 @@ namespace DeferredLightingExample
             /// the same pixel.
             /// For pixels that shouldnt be lit, for example the light geometry, normals are set to rgb = 0
             /// and we can use that to simply output white in our lightTarget for that pixel.
-            GraphicsDevice.SetRenderTargets(lightTarget);
+            GraphicsDevice.SetRenderTargets(lightTarget, blurHTarget, blurVTarget) ;
             GraphicsDevice.BlendState = BlendState.Additive;
             GraphicsDevice.DepthStencilState = DepthStencilState.None;
 
             deferredEffect.SetColorMap(colorTarget);
             deferredEffect.SetNormalMap(normalTarget);
             deferredEffect.SetPositionMap(positionTarget);
-
+            deferredEffect.SetBloomFilter(bloomFilterTarget);
             lightsManager.Draw();
 
 
@@ -216,6 +220,9 @@ namespace DeferredLightingExample
             deferredEffect.SetLightMap(lightTarget);
             deferredEffect.SetScreenSize(new Vector2(screenWidth, screenHeight));
             deferredEffect.SetTech("integrate");
+
+            deferredEffect.SetBlurH(blurHTarget);
+            deferredEffect.SetBlurV(blurVTarget);
 
             fullScreenQuad.Draw(deferredEffect.effect);
 
@@ -291,12 +298,13 @@ namespace DeferredLightingExample
         }
         private void drawPlane()
         {
-            basicModelEffect.SetTech("basic_color");
-            
+            basicModelEffect.SetTech("colorTex_lightEn");
+            basicModelEffect.SetColorTexture(planeTex);
+            basicModelEffect.SetTiling(Vector2.One * 500);
+
             foreach (var mesh in plane.Meshes)
             {
                 var w = mesh.ParentBone.Transform * Matrix.CreateScale(10f) * Matrix.CreateTranslation(0, 0, 0);
-                basicModelEffect.SetColor(Color.DarkGray.ToVector3());
                 basicModelEffect.SetWorld(w);
                 basicModelEffect.SetKA(0.3f);
                 basicModelEffect.SetKD(0.8f);
@@ -307,7 +315,7 @@ namespace DeferredLightingExample
 
                 mesh.Draw();
             }
-            
+            basicModelEffect.SetTiling(Vector2.One);
         }
 
         public static void AssignEffect(Model m, Effect e)
@@ -325,6 +333,9 @@ namespace DeferredLightingExample
             colorTarget = new RenderTarget2D(GraphicsDevice, screenWidth, screenHeight, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8);
             normalTarget = new RenderTarget2D(GraphicsDevice, screenWidth, screenHeight, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8);
             positionTarget = new RenderTarget2D(GraphicsDevice, screenWidth, screenHeight, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8);
+            bloomFilterTarget = new RenderTarget2D(GraphicsDevice, screenWidth, screenHeight, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8);
+            blurHTarget = new RenderTarget2D(GraphicsDevice, screenWidth, screenHeight, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8);
+            blurVTarget = new RenderTarget2D(GraphicsDevice, screenWidth, screenHeight, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8);
             lightTarget = new RenderTarget2D(GraphicsDevice, screenWidth, screenHeight, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8);
         }
         float timeL = 0f;

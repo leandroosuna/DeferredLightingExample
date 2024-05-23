@@ -4,6 +4,7 @@
   <Platform>Windows</Platform>
   <Config />
   <SourceFiles>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/tex/planeTex.png</File>
     <File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/10.spritefont</File>
     <File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/15.spritefont</File>
     <File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/20.spritefont</File>
@@ -19,10 +20,6 @@
     <File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Effects/deferred.fx</File>
   </SourceFiles>
   <DestFiles>
-    <File xsi:nil="true" />
-    <File xsi:nil="true" />
-    <File xsi:nil="true" />
-    <File xsi:nil="true" />
     <File xsi:nil="true" />
   </DestFiles>
 </SourceFileCollection>

@@ -27,6 +27,7 @@ namespace DeferredLightingExample.Effects
         EffectParameter cameraPosition;
         EffectParameter lightPosition;
 
+        EffectParameter tiling;
 
         public BasicModelEffect(string effect)
         {
@@ -53,6 +54,7 @@ namespace DeferredLightingExample.Effects
             KD = effect.Parameters["KD"];
             KS = effect.Parameters["KS"];
             shininess = effect.Parameters["shininess"];
+            tiling = effect.Parameters["tiling"];
         }
         public void SetWorld(Matrix world)
         {
@@ -65,6 +67,10 @@ namespace DeferredLightingExample.Effects
         public void SetProjection(Matrix projection)
         {
             this.projection.SetValue(projection);
+        }
+        public void SetTiling(Vector2 tiling)
+        {
+            this.tiling.SetValue(tiling);
         }
         public void SetColorTexture(Texture2D texture)
         {

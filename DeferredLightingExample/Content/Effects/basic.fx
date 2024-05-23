@@ -10,6 +10,7 @@ float4x4 inverseTransposeWorld;
 
 float3 color;
 float filter;
+float2 tiling;
 struct VertexShaderInput
 {
     float4 Position : POSITION;
@@ -29,7 +30,7 @@ struct PSO
     float4 color : COLOR0;
     float4 normal : COLOR1;
     float4 position : COLOR2;
-    //float4 target4 : COLOR3; //You can use up to 4 RTs.
+    float4 bloomFilter : COLOR3; //You can use up to 4 RTs.
 };
 
 texture colorTexture;
@@ -52,7 +53,7 @@ VertexShaderOutput ColorVS(in VertexShaderInput input)
     output.WorldPos = worldPosition;
     output.Position = screenPos;
     output.Normal = mul(float4(input.Normal, 1), inverseTransposeWorld);
-    output.TexCoord = input.TexCoord ;
+    output.TexCoord = input.TexCoord * tiling;
     return output;
 }
 PSO ColorPS(VertexShaderOutput input)
@@ -65,6 +66,7 @@ PSO ColorPS(VertexShaderOutput input)
     output.color = float4(color, KD);
     output.normal = float4(normal, KS);
     output.position = float4(input.WorldPos.xyz, shininess);
+    output.bloomFilter = float4(0, 0, 0, 1);
     return output;
 }
 PSO LightDisPS(VertexShaderOutput input)
@@ -77,6 +79,7 @@ PSO LightDisPS(VertexShaderOutput input)
     output.color = float4(color, 0);
     output.normal = float4(0, 0, 0, 1); //rgb=0 light dis
     output.position = float4(input.WorldPos.xyz, 0);
+    output.bloomFilter = float4(color, 1);
     return output;
 }
 PSO TexPS(VertexShaderOutput input)
@@ -91,6 +94,7 @@ PSO TexPS(VertexShaderOutput input)
     output.color = float4(texColor, KD);
     output.normal = float4(normal, KS);
     output.position = float4(input.WorldPos.xyz, shininess);
+    output.bloomFilter = float4(0, 0, 0, 1);
     return output;
 }
 

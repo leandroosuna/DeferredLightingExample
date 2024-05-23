@@ -44,7 +44,7 @@ namespace DeferredLightingExample.Cameras
             frustum = new BoundingFrustum(Matrix.Identity);
             fieldOfView = MathHelper.ToRadians(100);
             this.aspectRatio = aspectRatio;
-            position = new Vector3(-2, 2, 2);
+            position = new Vector3(-2, 6, 2);
             nearPlaneDistance = 1; 
             farPlaneDistance = 1000;
             yaw = 310;

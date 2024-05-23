@@ -1,1 +1,38 @@
-<?xml version="1.0" encoding="utf-8"?><SourceFileCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><Profile>HiDef</Profile><Platform>Windows</Platform><Config /><SourceFiles><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Effects/basic.fx</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Effects/deferred.fx</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/10.spritefont</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/15.spritefont</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/20.spritefont</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/25.spritefont</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/30.spritefont</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/cone.fbx</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/cube.fbx</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/disk.fbx</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/lightSphere.fbx</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/plane.fbx</File><File>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/sphere.fbx</File></SourceFiles><DestFiles><File xsi:nil="true" /><File xsi:nil="true" /><File xsi:nil="true" /><File xsi:nil="true" /><File xsi:nil="true" /><File xsi:nil="true" /><File xsi:nil="true" /><File xsi:nil="true" /><File xsi:nil="true" /><File xsi:nil="true" /><File xsi:nil="true" /><File xsi:nil="true" /><File xsi:nil="true" /></DestFiles></SourceFileCollection>
+<?xml version="1.0" encoding="utf-8"?>
+<SourceFileCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Profile>HiDef</Profile>
+  <Platform>Windows</Platform>
+  <Config />
+  <SourceFiles>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Effects/basic.fx</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Effects/deferred.fx</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/10.spritefont</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/15.spritefont</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/20.spritefont</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/25.spritefont</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/30.spritefont</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/cone.fbx</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/cube.fbx</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/disk.fbx</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/lightSphere.fbx</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/plane.fbx</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/sphere.fbx</File>
+    <File>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/tex/planeTex.png</File>
+  </SourceFiles>
+  <DestFiles>
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+  </DestFiles>
+</SourceFileCollection>

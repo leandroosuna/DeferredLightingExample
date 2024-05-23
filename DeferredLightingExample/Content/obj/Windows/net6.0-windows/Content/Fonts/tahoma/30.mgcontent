@@ -1,1 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?><PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SourceFile>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/30.spritefont</SourceFile><SourceTime>2023-01-20T14:58:41.7148248-03:00</SourceTime><DestFile>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/bin/Windows/Content/Fonts/tahoma/30.xnb</DestFile><DestTime>2023-11-27T14:41:24.097466-03:00</DestTime><Importer>FontDescriptionImporter</Importer><ImporterTime>2022-07-26T08:44:56-03:00</ImporterTime><Processor>FontDescriptionProcessor</Processor><ProcessorTime>2022-07-26T08:44:56-03:00</ProcessorTime><Parameters><Key>PremultiplyAlpha</Key><Value>True</Value></Parameters><Parameters><Key>TextureFormat</Key><Value>Compressed</Value></Parameters><Dependencies /><BuildAsset /><BuildOutput /></PipelineBuildEvent>
+<?xml version="1.0" encoding="utf-8"?>
+<PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SourceFile>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Fonts/tahoma/30.spritefont</SourceFile>
+  <SourceTime>2024-05-23T01:28:18.9165212-03:00</SourceTime>
+  <DestFile>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/bin/Windows/Content/Fonts/tahoma/30.xnb</DestFile>
+  <DestTime>2024-05-23T01:29:52.5569598-03:00</DestTime>
+  <Importer>FontDescriptionImporter</Importer>
+  <ImporterTime>2022-07-26T08:44:56-03:00</ImporterTime>
+  <Processor>FontDescriptionProcessor</Processor>
+  <ProcessorTime>2022-07-26T08:44:56-03:00</ProcessorTime>
+  <Parameters>
+    <Key>PremultiplyAlpha</Key>
+    <Value>True</Value>
+  </Parameters>
+  <Parameters>
+    <Key>TextureFormat</Key>
+    <Value>Compressed</Value>
+  </Parameters>
+  <Dependencies />
+  <BuildAsset />
+  <BuildOutput />
+</PipelineBuildEvent>

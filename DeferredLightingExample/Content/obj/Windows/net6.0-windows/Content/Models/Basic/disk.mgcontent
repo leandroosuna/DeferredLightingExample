@@ -1,1 +1,70 @@
-<?xml version="1.0" encoding="utf-8"?><PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SourceFile>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/disk.fbx</SourceFile><SourceTime>2023-11-24T19:13:20.5356806-03:00</SourceTime><DestFile>D:/Games/SpaceKarts dev/DeferredLightingExample/DeferredLightingExample/DeferredLightingExample/Content/bin/Windows/Content/Models/Basic/disk.xnb</DestFile><DestTime>2023-11-27T14:41:24.1715338-03:00</DestTime><Importer>FbxImporter</Importer><ImporterTime>2022-07-26T08:44:56-03:00</ImporterTime><Processor>ModelProcessor</Processor><ProcessorTime>2022-07-26T08:44:56-03:00</ProcessorTime><Parameters><Key>ColorKeyColor</Key><Value>0,0,0,0</Value></Parameters><Parameters><Key>ColorKeyEnabled</Key><Value>True</Value></Parameters><Parameters><Key>DefaultEffect</Key><Value>BasicEffect</Value></Parameters><Parameters><Key>GenerateMipmaps</Key><Value>True</Value></Parameters><Parameters><Key>GenerateTangentFrames</Key><Value>False</Value></Parameters><Parameters><Key>PremultiplyTextureAlpha</Key><Value>True</Value></Parameters><Parameters><Key>PremultiplyVertexColors</Key><Value>True</Value></Parameters><Parameters><Key>ResizeTexturesToPowerOfTwo</Key><Value>False</Value></Parameters><Parameters><Key>RotationX</Key><Value>0</Value></Parameters><Parameters><Key>RotationY</Key><Value>0</Value></Parameters><Parameters><Key>RotationZ</Key><Value>0</Value></Parameters><Parameters><Key>Scale</Key><Value>1</Value></Parameters><Parameters><Key>SwapWindingOrder</Key><Value>False</Value></Parameters><Parameters><Key>TextureFormat</Key><Value>Compressed</Value></Parameters><Dependencies /><BuildAsset /><BuildOutput /></PipelineBuildEvent>
+<?xml version="1.0" encoding="utf-8"?>
+<PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SourceFile>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Models/Basic/disk.fbx</SourceFile>
+  <SourceTime>2024-05-23T01:28:18.9185239-03:00</SourceTime>
+  <DestFile>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/bin/Windows/Content/Models/Basic/disk.xnb</DestFile>
+  <DestTime>2024-05-23T01:29:52.7851903-03:00</DestTime>
+  <Importer>FbxImporter</Importer>
+  <ImporterTime>2022-07-26T08:44:56-03:00</ImporterTime>
+  <Processor>ModelProcessor</Processor>
+  <ProcessorTime>2022-07-26T08:44:56-03:00</ProcessorTime>
+  <Parameters>
+    <Key>ColorKeyColor</Key>
+    <Value>0,0,0,0</Value>
+  </Parameters>
+  <Parameters>
+    <Key>ColorKeyEnabled</Key>
+    <Value>True</Value>
+  </Parameters>
+  <Parameters>
+    <Key>DefaultEffect</Key>
+    <Value>BasicEffect</Value>
+  </Parameters>
+  <Parameters>
+    <Key>GenerateMipmaps</Key>
+    <Value>True</Value>
+  </Parameters>
+  <Parameters>
+    <Key>GenerateTangentFrames</Key>
+    <Value>False</Value>
+  </Parameters>
+  <Parameters>
+    <Key>PremultiplyTextureAlpha</Key>
+    <Value>True</Value>
+  </Parameters>
+  <Parameters>
+    <Key>PremultiplyVertexColors</Key>
+    <Value>True</Value>
+  </Parameters>
+  <Parameters>
+    <Key>ResizeTexturesToPowerOfTwo</Key>
+    <Value>False</Value>
+  </Parameters>
+  <Parameters>
+    <Key>RotationX</Key>
+    <Value>0</Value>
+  </Parameters>
+  <Parameters>
+    <Key>RotationY</Key>
+    <Value>0</Value>
+  </Parameters>
+  <Parameters>
+    <Key>RotationZ</Key>
+    <Value>0</Value>
+  </Parameters>
+  <Parameters>
+    <Key>Scale</Key>
+    <Value>1</Value>
+  </Parameters>
+  <Parameters>
+    <Key>SwapWindingOrder</Key>
+    <Value>False</Value>
+  </Parameters>
+  <Parameters>
+    <Key>TextureFormat</Key>
+    <Value>Compressed</Value>
+  </Parameters>
+  <Dependencies />
+  <BuildAsset />
+  <BuildOutput />
+</PipelineBuildEvent>

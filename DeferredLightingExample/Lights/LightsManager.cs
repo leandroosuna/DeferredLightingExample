@@ -59,10 +59,46 @@ namespace DeferredLightingExample.Managers
             lightsToDraw.ForEach(l => l.Draw());
             
         }
+        public void DrawAmbient()
+        {
+            effect.SetCameraPosition(game.camera.position);
+            effect.SetView(game.camera.view);
+            effect.SetProjection(game.camera.projection);
+
+            effect.SetAmbientLight(ambientLight);
+
+            effect.SetTech("ambient_light");
+
+            game.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+
+            game.fullScreenQuad.Draw(effect.effect);
+        }
+        public int partialLightsCount = 0;
+        public void DrawLightPartial()
+        {
+            effect.SetTech("point_light");
+            game.GraphicsDevice.RasterizerState = RasterizerState.CullClockwise; //remove front side of spheres to be drawn
+
+            for (int i = 0; i < partialLightsCount; i++)
+            {
+                lightsToDraw[i].Draw();
+            }
+        }
         public void DrawLightGeo()
         {
             lightsToDraw.ForEach(l => l.DrawLightGeo());            
         }
+
+        public void DrawLightGeoPartial()
+        {
+
+            for (int i = 0; i < partialLightsCount; i++)
+            {
+                lightsToDraw[i].DrawLightGeo();
+            }
+
+        }
+
         public void register(LightVolume volume)
         { 
             lights.Add(volume);

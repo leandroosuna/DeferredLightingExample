@@ -43,7 +43,7 @@ namespace DeferredLightingExample
 
         static DeferredGame instance;
         
-        int maxPointLights = 100;
+        int maxPointLights = 200;
 
         public DeferredGame()
         {
@@ -113,7 +113,7 @@ namespace DeferredLightingExample
 
             // This manager handles the lightVolumes, updating and drawing them
             lightsManager = new LightsManager();
-            lightsManager.ambientLight = new AmbientLight(new Vector3(20, 50, 20), Vector3.One, Vector3.One, Vector3.One);
+            lightsManager.ambientLight = new AmbientLight(new Vector3(20, 50, 20), new Vector3(1,.7f,1), Vector3.One, Vector3.One);
 
             // Create many point lights
             generatePointLights();
@@ -132,16 +132,19 @@ namespace DeferredLightingExample
         {
             deltaTimeU = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            
+
             handleInput(deltaTimeU);
 
-            // Update camera input and values
-            camera.Update(deltaTimeU);
-            // Updater for many lights
-            updatePointLights(deltaTimeU);
+            if (!demo)
+            {
+                // Update camera input and values
+                camera.Update(deltaTimeU);
+                // Updater for many lights
+                updatePointLights(deltaTimeU);
             
             
-            lightsManager.Update(deltaTimeU);
+                lightsManager.Update(deltaTimeU);
+            }
 
             base.Update(gameTime);
         }
@@ -150,44 +153,69 @@ namespace DeferredLightingExample
         int fps;
         float deltaTimeD;
         bool debugRTs = false;
+
+        bool demo = false;
+        int demoStep = 0;
+        bool demoAuto = false;
+        double demoTimer = 0;
+        double lightTimer = 0;
         protected override void Draw(GameTime gameTime)
         {
             deltaTimeD = (float)gameTime.ElapsedGameTime.TotalSeconds;
             time += deltaTimeD;
             time %= 0.12;
+            demoTimer += deltaTimeD;
+            lightTimer += deltaTimeD;
+
             if (time <= .025)
             {
                 fps = (int)(1 / deltaTimeD);
                 frameTime = deltaTimeD * 1000;
             }
-
+            if(demoAuto)
+            {
+                if(demoTimer >= 5)
+                {
+                    demoTimer = 0;
+                
+                
+                    if(demoStep < 3)
+                    {
+                        demoStep++;
+                        lightsManager.partialLightsCount = 0;
+                    }
+                    else
+                    {
+                        demoStep = 0;
+                        demo = false;
+                    }    
+                }
+            }
+            
             basicModelEffect.SetView(camera.view);
             basicModelEffect.SetProjection(camera.projection);
             deferredEffect.SetView(camera.view);
             deferredEffect.SetProjection(camera.projection);
             deferredEffect.SetCameraPosition(camera.position);
-
+            if(demo)
+            {
+                DrawDemo();
+                return;
+            }
             /// Using Multiple Render Targets for efficiency (G-Buffers)
             /// Target 1 (colorTarget) RGB = color, A = KD
             /// Target 2 (normalTarget) RGB = normal(scaled), A = KS
             /// Target 3 (positionTarget) RGB = world position, A = shininess(scale if necessary)
-            /// Target 4 (not in use, but could be used) 
+            /// Target 4 (bloomFilterTarget) RGB = filter, A = (not in use) 
             ///
+            /// Filter: anything light emissive 
+            /// 
             /// Anything that you draw in this step must write to all of the textures
             /// BlendState should be NonPremultiplied or Opaque, transparent objects are not supported.
             /// the shader technique used must have "AlphaBlendEnable = FALSE;"
             /// GraphicsProfile.HiDef should be used, as well as shader model 5.0
-            /// 
-            GraphicsDevice.SetRenderTargets(colorTarget, normalTarget, positionTarget, bloomFilterTarget);
-            GraphicsDevice.BlendState = BlendState.NonPremultiplied;
-            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+            DrawPass(0);
             
-            // Draw a simple plane, enable lighting on it
-            drawPlane();
-            // Draw the geometry of the lights in the scene, so that we can see where the generators are
-            lightsManager.DrawLightGeo();
-
             /// Now we calculate the lights. first we start by sending the targets from before as textures
             /// First, we use a fullscreen quad to calculate the ambient light, as a baseline (optional)
             /// Then, we iterate our point lights and render them as spheres in the correct position. 
@@ -197,63 +225,265 @@ namespace DeferredLightingExample
             /// the same pixel.
             /// For pixels that shouldnt be lit, for example the light geometry, normals are set to rgb = 0
             /// and we can use that to simply output white in our lightTarget for that pixel.
-            GraphicsDevice.SetRenderTargets(lightTarget, blurHTarget, blurVTarget) ;
-            GraphicsDevice.BlendState = BlendState.Additive;
-            GraphicsDevice.DepthStencilState = DepthStencilState.None;
-
-            deferredEffect.SetColorMap(colorTarget);
-            deferredEffect.SetNormalMap(normalTarget);
-            deferredEffect.SetPositionMap(positionTarget);
-            deferredEffect.SetBloomFilter(bloomFilterTarget);
-            lightsManager.Draw();
-
-
-            /// Finally, we have our color texture we calculated in step one, and the lights from step two
-            /// we combine them here by simply multiplying them, finalColor = color * light, 
-            /// using a final fullscreen quad pass.
             /// 
-            GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.BlendState = BlendState.Opaque;
-            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+            /// We take advantage of the fullscreen quad rendered for the ambient light to blur the emissive tex
+            /// horizontally and vertically to different textures at the same time
+            DrawPass(1);
 
-            deferredEffect.SetLightMap(lightTarget);
-            deferredEffect.SetScreenSize(new Vector2(screenWidth, screenHeight));
-            deferredEffect.SetTech("integrate");
+            /// Finally, we have our color texture we calculated in step one, the lights and blurred filter 
+            /// from step two. We combine them here by simply multiplying them 
+            /// finalColor = color * light + bloom
+            /// using a final fullscreen quad pass 
+            DrawPass(2);
 
-            deferredEffect.SetBlurH(blurHTarget);
-            deferredEffect.SetBlurV(blurVTarget);
-
-            fullScreenQuad.Draw(deferredEffect.effect);
-
-            var lightCount = lightsManager.lightsToDraw.Count;
-            var rec = new Rectangle(0, 0, screenWidth, screenHeight);
-
-            /// In this example, by hitting key 0 you can see the targets in the corners of the screen
-            if (debugRTs)
-            {
-                SpriteBatch.Begin(blendState: BlendState.Opaque);
-
-                SpriteBatch.Draw(colorTarget, Vector2.Zero, rec, Color.White, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
-                SpriteBatch.Draw(normalTarget, new Vector2(0, screenHeight - screenHeight / 4), rec, Color.White, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
-                SpriteBatch.Draw(positionTarget, new Vector2(screenWidth - screenWidth / 4, 0), rec, Color.White, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
-                SpriteBatch.Draw(lightTarget, new Vector2(screenWidth - screenWidth / 4, screenHeight - screenHeight / 4), rec, Color.White, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
-
-                SpriteBatch.End();
-            }
-
-            string ft = (frameTime * 1000).ToString("0,####");
-            string fpsStr = "FPS " + fps + " FT " + ft + " Lights " + lightCount;
-            string str = "8: FullScreen Toggle, 9: Vsync Toggle, 0: ShowRTS";
-            
-            SpriteBatch.Begin();
-            SpriteBatch.DrawString(Font, fpsStr, Vector2.Zero, Color.White);
-            SpriteBatch.DrawString(Font, str, new Vector2(screenWidth - Font.MeasureString(str).X,0), Color.White);
-            SpriteBatch.End();
-
-            // TODO: Add your drawing code here
 
             base.Draw(gameTime);
+        }
+
+        
+        void DrawDemo()
+        {
+            var rec = new Rectangle(0, 0, screenWidth, screenHeight);
+            var colorStr = "Target Color";
+            var normalStr = "Target Normal";
+            var positionStr = "Target Position";
+            var bloomStr = "Target Bloom";
+            var lightStr = "Target Light";
+            var blurHStr = "Target BlurH";
+            var blurVStr = "Target BlurV";
+            var offset = 7;
+            var offsetTL = new Vector2(offset, offset);
+            var offsetTR = new Vector2(-offset, offset);
+            var offsetTC = new Vector2(0, offset);
+            var offsetBL = new Vector2(offset, -offset);
+            var offsetBR = new Vector2(-offset, -offset);
+
+            var str = "Dibujando ";
+            switch (demoStep)
+            {
+                case 0:
+                    GraphicsDevice.SetRenderTargets(colorTarget, normalTarget, positionTarget, bloomFilterTarget);
+                    GraphicsDevice.BlendState = BlendState.NonPremultiplied;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                    GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+                    drawPlane();
+
+                    GraphicsDevice.SetRenderTargets(null);
+                    GraphicsDevice.BlendState = BlendState.Opaque;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                    GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+
+                    SpriteBatch.Begin(blendState: BlendState.Opaque);
+
+                    SpriteBatch.Draw(colorTarget, Vector2.Zero, rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+                    SpriteBatch.Draw(normalTarget, new Vector2(0, screenHeight - screenHeight / 2), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+                    SpriteBatch.Draw(positionTarget, new Vector2(screenWidth - screenWidth / 2, 0), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+                    SpriteBatch.Draw(bloomFilterTarget, new Vector2(screenWidth - screenWidth / 2, screenHeight - screenHeight / 2), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+
+                    SpriteBatch.End();
+
+                    SpriteBatch.Begin();
+                    SpriteBatch.DrawString(Font, colorStr, Vector2.Zero + offsetTL, Color.White);
+                    SpriteBatch.DrawString(Font, normalStr, new Vector2(0, screenHeight - Font.MeasureString(normalStr).Y) + offsetBL, Color.White);
+                    SpriteBatch.DrawString(Font, positionStr, new Vector2(screenWidth - Font.MeasureString(positionStr).X, 0) + offsetTR, Color.White);
+                    SpriteBatch.DrawString(Font, bloomStr, new Vector2(screenWidth - Font.MeasureString(bloomStr).X, screenHeight - Font.MeasureString(bloomStr).Y) + offsetBR, Color.White);
+                    str += "plano";
+                    SpriteBatch.DrawString(Font, str, new Vector2(screenWidth/2 - Font.MeasureString(str).X/2, screenHeight / 2 + Font.MeasureString(str).Y / 2), Color.White);
+
+                    SpriteBatch.End();
+
+
+                    break;
+                case 1:
+                    GraphicsDevice.SetRenderTargets(colorTarget, normalTarget, positionTarget, bloomFilterTarget);
+                    GraphicsDevice.BlendState = BlendState.NonPremultiplied;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                    GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+                    drawPlane();
+
+                    if (lightTimer >= .1)
+                    {
+                        lightTimer = 0;
+                        lightsManager.partialLightsCount++;
+                        lightsManager.partialLightsCount%= lightsManager.lightsToDraw.Count;
+                    }
+                    lightsManager.DrawLightGeoPartial();
+                    
+                    GraphicsDevice.SetRenderTargets(null);
+                    GraphicsDevice.BlendState = BlendState.Opaque;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                    GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+
+                    SpriteBatch.Begin(blendState: BlendState.Opaque);
+                    
+                    SpriteBatch.Draw(colorTarget, Vector2.Zero, rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+                    SpriteBatch.Draw(normalTarget, new Vector2(0, screenHeight - screenHeight / 2), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+                    SpriteBatch.Draw(positionTarget, new Vector2(screenWidth - screenWidth / 2, 0), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+                    SpriteBatch.Draw(bloomFilterTarget, new Vector2(screenWidth - screenWidth / 2, screenHeight - screenHeight / 2), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+
+                    SpriteBatch.End();
+
+                    
+                    SpriteBatch.Begin();
+                    SpriteBatch.DrawString(Font, colorStr, Vector2.Zero + offsetTL, Color.White);
+                    SpriteBatch.DrawString(Font, normalStr, new Vector2(0, screenHeight - Font.MeasureString(normalStr).Y) + offsetBL, Color.White);
+                    SpriteBatch.DrawString(Font, positionStr, new Vector2(screenWidth - Font.MeasureString(positionStr).X, 0) + offsetTR, Color.White);
+                    SpriteBatch.DrawString(Font, bloomStr, new Vector2(screenWidth - Font.MeasureString(bloomStr).X, screenHeight - Font.MeasureString(bloomStr).Y) + offsetBR, Color.White);
+                    str += "geometria luz "+lightsManager.partialLightsCount;
+                    SpriteBatch.DrawString(Font, str, new Vector2(screenWidth / 2 - Font.MeasureString(str).X / 2, screenHeight / 2 + Font.MeasureString(str).Y / 2), Color.White);
+
+                    SpriteBatch.End();
+
+
+                    break;
+                case 2:
+                    GraphicsDevice.SetRenderTargets(lightTarget, blurHTarget, blurVTarget);
+                    GraphicsDevice.BlendState = BlendState.Additive;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.None;
+
+                    deferredEffect.SetColorMap(colorTarget);
+                    deferredEffect.SetNormalMap(normalTarget);
+                    deferredEffect.SetPositionMap(positionTarget);
+                    deferredEffect.SetBloomFilter(bloomFilterTarget);
+                    lightsManager.DrawAmbient();
+
+                    GraphicsDevice.SetRenderTargets(null);
+                    GraphicsDevice.BlendState = BlendState.Opaque;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                    GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+
+                    SpriteBatch.Begin(blendState: BlendState.Opaque);
+
+                    SpriteBatch.Draw(lightTarget, new Vector2(screenWidth / 4, 0), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+                    SpriteBatch.Draw(blurHTarget, new Vector2(0, screenHeight - screenHeight / 2), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+                    SpriteBatch.Draw(blurVTarget, new Vector2(screenWidth - screenWidth / 2, screenHeight - screenHeight / 2), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+
+                    SpriteBatch.End();
+
+                    SpriteBatch.Begin();
+                    SpriteBatch.DrawString(Font, lightStr, new Vector2(screenWidth/2 - Font.MeasureString(lightStr).X/2, 0) + offsetTC, Color.White);
+                    SpriteBatch.DrawString(Font, blurHStr, new Vector2(0, screenHeight - Font.MeasureString(normalStr).Y) + offsetBL, Color.White);
+                    SpriteBatch.DrawString(Font, blurVStr, new Vector2(screenWidth - Font.MeasureString(bloomStr).X, screenHeight - Font.MeasureString(bloomStr).Y) + offsetBR, Color.White);
+                    
+                    str += "luz ambiente, blur horizontal, blur vertical";
+                    SpriteBatch.DrawString(Font, str, new Vector2(screenWidth / 2 - Font.MeasureString(str).X / 2, screenHeight / 2 + Font.MeasureString(str).Y / 2), Color.White);
+
+                    SpriteBatch.End();
+
+                    break;
+                case 3:
+                    GraphicsDevice.SetRenderTargets(lightTarget, blurHTarget, blurVTarget);
+                    GraphicsDevice.BlendState = BlendState.Additive;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.None;
+
+                    deferredEffect.SetColorMap(colorTarget);
+                    deferredEffect.SetNormalMap(normalTarget);
+                    deferredEffect.SetPositionMap(positionTarget);
+                    deferredEffect.SetBloomFilter(bloomFilterTarget);
+                    lightsManager.DrawAmbient();
+                    if (lightTimer >= .1)
+                    {
+                        lightTimer = 0;
+                        lightsManager.partialLightsCount++;
+                        lightsManager.partialLightsCount %= lightsManager.lightsToDraw.Count;
+                    }
+                    lightsManager.DrawLightPartial();
+
+                    GraphicsDevice.SetRenderTargets(null);
+                    GraphicsDevice.BlendState = BlendState.Opaque;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                    GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+
+                    SpriteBatch.Begin(blendState: BlendState.Opaque);
+
+                    SpriteBatch.Draw(lightTarget, new Vector2(screenWidth / 4, 0), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+                    SpriteBatch.Draw(blurHTarget, new Vector2(0, screenHeight - screenHeight / 2), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+                    SpriteBatch.Draw(blurVTarget, new Vector2(screenWidth - screenWidth / 2, screenHeight - screenHeight / 2), rec, Color.White, 0f, Vector2.Zero, .5f, SpriteEffects.None, 0f);
+
+                    SpriteBatch.End();
+
+                    SpriteBatch.Begin();
+                    SpriteBatch.DrawString(Font, lightStr, new Vector2(screenWidth / 2 - Font.MeasureString(lightStr).X / 2, 0) + offsetTC, Color.White);
+                    SpriteBatch.DrawString(Font, blurHStr, new Vector2(0, screenHeight - Font.MeasureString(normalStr).Y) + offsetBL, Color.White);
+                    SpriteBatch.DrawString(Font, blurVStr, new Vector2(screenWidth - Font.MeasureString(bloomStr).X, screenHeight - Font.MeasureString(bloomStr).Y) + offsetBR, Color.White);
+
+                    str += "luz "+lightsManager.partialLightsCount;
+                    SpriteBatch.DrawString(Font, str, new Vector2(screenWidth / 2 - Font.MeasureString(str).X / 2, screenHeight / 2 + Font.MeasureString(str).Y / 2), Color.White);
+
+                    SpriteBatch.End();
+
+                    break;
+                
+            }
+        }
+
+        void DrawPass(int pass)
+        {
+            switch(pass)
+            {
+                case 0:
+                    GraphicsDevice.SetRenderTargets(colorTarget, normalTarget, positionTarget, bloomFilterTarget);
+                    GraphicsDevice.BlendState = BlendState.NonPremultiplied;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                    GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+
+                    // Draw a simple plane, enable lighting on it
+                    drawPlane();
+                    // Draw the geometry of the lights in the scene, so that we can see where the generators are
+                    lightsManager.DrawLightGeo();
+                    break;
+                case 1:
+                    GraphicsDevice.SetRenderTargets(lightTarget, blurHTarget, blurVTarget);
+                    GraphicsDevice.BlendState = BlendState.Additive;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.None;
+
+                    deferredEffect.SetColorMap(colorTarget);
+                    deferredEffect.SetNormalMap(normalTarget);
+                    deferredEffect.SetPositionMap(positionTarget);
+                    deferredEffect.SetBloomFilter(bloomFilterTarget);
+                    lightsManager.Draw();
+                    break;
+                case 2:
+                    GraphicsDevice.SetRenderTarget(null);
+                    GraphicsDevice.BlendState = BlendState.Opaque;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                    GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+
+                    deferredEffect.SetLightMap(lightTarget);
+                    deferredEffect.SetScreenSize(new Vector2(screenWidth, screenHeight));
+                    deferredEffect.SetTech("integrate");
+
+                    deferredEffect.SetBlurH(blurHTarget);
+                    deferredEffect.SetBlurV(blurVTarget);
+
+                    fullScreenQuad.Draw(deferredEffect.effect);
+
+                    var lightCount = lightsManager.lightsToDraw.Count;
+                    var rec = new Rectangle(0, 0, screenWidth, screenHeight);
+
+                    /// In this example, by hitting key 0 you can see the targets in the corners of the screen
+                    if (debugRTs)
+                    {
+                        SpriteBatch.Begin(blendState: BlendState.Opaque);
+
+                        SpriteBatch.Draw(colorTarget, Vector2.Zero, rec, Color.White, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
+                        SpriteBatch.Draw(normalTarget, new Vector2(0, screenHeight - screenHeight / 4), rec, Color.White, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
+                        SpriteBatch.Draw(positionTarget, new Vector2(screenWidth - screenWidth / 4, 0), rec, Color.White, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
+                        SpriteBatch.Draw(lightTarget, new Vector2(screenWidth - screenWidth / 4, screenHeight - screenHeight / 4), rec, Color.White, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
+
+                        SpriteBatch.End();
+                    }
+
+                    string ft = (frameTime * 1000).ToString("0,####");
+                    string fpsStr = "FPS " + fps + " FT " + ft + " Lights " + lightCount;
+                    string str = "9: Vsync Toggle, 0: ShowRTS";
+
+                    SpriteBatch.Begin();
+                    SpriteBatch.DrawString(Font, fpsStr, Vector2.Zero, Color.White);
+                    SpriteBatch.DrawString(Font, str, new Vector2(screenWidth - Font.MeasureString(str).X, 0), Color.White);
+                    SpriteBatch.End();
+                    break;
+            }
         }
         void handleInput(float deltaTime)
         {
@@ -275,26 +505,36 @@ namespace DeferredLightingExample
                 Graphics.SynchronizeWithVerticalRetrace = !Graphics.SynchronizeWithVerticalRetrace;
                 Graphics.ApplyChanges();
             }
-            if (keyState.IsKeyDown(Keys.D8) && !heldDown.Contains(Keys.D8))
+            
+            if (keyState.IsKeyDown(Keys.N) && !heldDown.Contains(Keys.N))
             {
-                heldDown.Add(Keys.D8);
-
-                if (screenHeight == 720)
-                {
-                    screenWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-                    screenHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
-                }
-                else
-                {
-                    screenWidth = 1280;
-                    screenHeight = 720;
-                }
-                Graphics.PreferredBackBufferWidth = screenWidth;
-                Graphics.PreferredBackBufferHeight = screenHeight;
-                Graphics.ApplyChanges();
-                setupRenderTargets();
+                heldDown.Add(Keys.N);
+                demo = true;
+                demoAuto = true;
                 
             }
+            if (keyState.IsKeyDown(Keys.M) && !heldDown.Contains(Keys.M))
+            {
+                heldDown.Add(Keys.M);
+                demo = !demo;
+                demoStep = 0;
+                demoAuto = false;
+            }
+            if (keyState.IsKeyDown(Keys.K) && !heldDown.Contains(Keys.K))
+            {
+                heldDown.Add(Keys.K);
+                if(demoStep>0)
+                    demoStep--;
+                lightsManager.partialLightsCount = 0;
+            }
+            if (keyState.IsKeyDown(Keys.L) && !heldDown.Contains(Keys.L))
+            {
+                heldDown.Add(Keys.L);
+                if (demoStep < 3)
+                    demoStep++;
+                lightsManager.partialLightsCount = 0;
+            }
+
         }
         private void drawPlane()
         {

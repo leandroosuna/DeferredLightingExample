@@ -137,7 +137,7 @@ float4 AmbientLight(PVSO input)
     
     if (KD == 0)
     {
-        return float4(1, 1, 1, 1);
+        return float4(0, 0, 0, 1);
     }
     
     float KS = normalRaw.a;
@@ -201,7 +201,7 @@ float4 PointLightPS(PVSO input) : COLOR
     
     if (KD == 0)
     {
-        return float4(1,1,1, 1);
+        return float4(0,0,0, 1);
     }
     
     float KS = normalRaw.a;

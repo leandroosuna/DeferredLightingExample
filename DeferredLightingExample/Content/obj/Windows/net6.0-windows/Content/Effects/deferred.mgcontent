@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <SourceFile>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/Effects/deferred.fx</SourceFile>
-  <SourceTime>2024-05-23T01:59:55.9726511-03:00</SourceTime>
+  <SourceTime>2024-05-23T13:06:45.518283-03:00</SourceTime>
   <DestFile>D:/Projects/vs/DeferredLightingExample/DeferredLightingExample/Content/bin/Windows/Content/Effects/deferred.xnb</DestFile>
-  <DestTime>2024-05-23T02:00:11.3384927-03:00</DestTime>
+  <DestTime>2024-05-23T13:06:46.6554697-03:00</DestTime>
   <Importer>EffectImporter</Importer>
   <ImporterTime>2022-07-26T08:44:56-03:00</ImporterTime>
   <Processor>EffectProcessor</Processor>

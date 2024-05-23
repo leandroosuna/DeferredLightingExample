@@ -4,5 +4,6 @@
 
 - Ambient light
 - Point Lights
-
+- Bloom
+- freeze frame demo
 ![](screen.png)

@@ -216,7 +216,7 @@ float4 PointLightPS(PVSO input) : COLOR
     //float scaling = 1- smoothstep(0, radius, distance(worldPos, lightPosition));
     
     //advanced scaling
-    float scaling = attenuate_no_cusp(distance(worldPos, lightPosition), radius, 3, 6);
+    float scaling = attenuate_no_cusp(distance(worldPos, lightPosition), radius, 5, 5);
     
     //red border for debug
     //if (scaling == 0)
@@ -262,6 +262,16 @@ technique point_light
         PixelShader = compile PS_SHADERMODEL PointLightPS();
     }
 }
+
+technique cone_light
+{
+    pass P0
+    {
+        VertexShader = compile VS_SHADERMODEL PointLightVS();
+        PixelShader = compile PS_SHADERMODEL PointLightPS();
+    }
+}
+
 technique ambient_light
 {
     pass P0

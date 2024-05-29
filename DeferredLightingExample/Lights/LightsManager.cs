@@ -41,19 +41,9 @@ namespace DeferredLightingExample.Managers
         public void Draw()
         {
 
-            effect.SetCameraPosition(game.camera.position);
-            effect.SetView(game.camera.view);
-            effect.SetProjection(game.camera.projection);
+            DrawAmbient();
 
-            effect.SetAmbientLight(ambientLight);
-            
-            effect.SetTech("ambient_light");
-
-            game.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise; 
-
-            game.fullScreenQuad.Draw(effect.effect);
-
-            effect.SetTech("point_light");
+            //effect.SetTech("point_light");
             game.GraphicsDevice.RasterizerState = RasterizerState.CullClockwise; //remove front side of spheres to be drawn
 
             lightsToDraw.ForEach(l => l.Draw());
@@ -76,7 +66,7 @@ namespace DeferredLightingExample.Managers
         public int partialLightsCount = 0;
         public void DrawLightPartial()
         {
-            effect.SetTech("point_light");
+            //effect.SetTech("point_light");
             game.GraphicsDevice.RasterizerState = RasterizerState.CullClockwise; //remove front side of spheres to be drawn
 
             for (int i = 0; i < partialLightsCount; i++)
@@ -102,6 +92,10 @@ namespace DeferredLightingExample.Managers
         public void register(LightVolume volume)
         { 
             lights.Add(volume);
+        }
+        public void destroy(LightVolume volume)
+        {
+            lights.Remove(volume);
         }
     }
 }

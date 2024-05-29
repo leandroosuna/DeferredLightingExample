@@ -104,6 +104,7 @@ technique basic_color
     pass P0
     {
         AlphaBlendEnable = FALSE;
+        
         VertexShader = compile VS_SHADERMODEL ColorVS();
         PixelShader = compile PS_SHADERMODEL ColorPS();
     }

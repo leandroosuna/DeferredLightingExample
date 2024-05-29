@@ -43,7 +43,7 @@ namespace DeferredLightingExample
 
         static DeferredGame instance;
         
-        int maxPointLights = 200;
+        int maxLights = 600;
 
         public DeferredGame()
         {
@@ -51,15 +51,15 @@ namespace DeferredLightingExample
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
-            screenWidth = 1280;
-            screenHeight = 720;
+            screenWidth = 1600;
+            screenHeight = 900;
 
             Graphics.GraphicsProfile = GraphicsProfile.HiDef; //Enables shader model 5.0, DX 11, MRT, AlphaBlendDisable, etc.
             Graphics.IsFullScreen = false;
             Window.IsBorderless = true;
             Graphics.PreferredBackBufferWidth = screenWidth;
             Graphics.PreferredBackBufferHeight = screenHeight;
-            Window.Position = new Point(320, 180);
+            Window.Position = new Point(0, 0);
             
             IsFixedTimeStep = false;
             Graphics.SynchronizeWithVerticalRetrace = true;
@@ -115,8 +115,8 @@ namespace DeferredLightingExample
             lightsManager = new LightsManager();
             lightsManager.ambientLight = new AmbientLight(new Vector3(20, 50, 20), new Vector3(1,.7f,1), Vector3.One, Vector3.One);
 
-            // Create many point lights
-            generatePointLights();
+            // Create many lights
+            generateLights();
 
             // Create the render targets we are going to use
             setupRenderTargets();
@@ -140,7 +140,7 @@ namespace DeferredLightingExample
                 // Update camera input and values
                 camera.Update(deltaTimeU);
                 // Updater for many lights
-                updatePointLights(deltaTimeU);
+                updateLights(deltaTimeU);
             
             
                 lightsManager.Update(deltaTimeU);
@@ -475,7 +475,7 @@ namespace DeferredLightingExample
                     }
 
                     string ft = (frameTime * 1000).ToString("0,####");
-                    string fpsStr = "FPS " + fps + " FT " + ft + " Lights " + lightCount;
+                    string fpsStr = "FPS " + fps + " FT " + ft + " Lights " + lightCount + "/" + lights.Count;
                     string str = "9: Vsync Toggle, 0: ShowRTS";
 
                     SpriteBatch.Begin();
@@ -505,7 +505,37 @@ namespace DeferredLightingExample
                 Graphics.SynchronizeWithVerticalRetrace = !Graphics.SynchronizeWithVerticalRetrace;
                 Graphics.ApplyChanges();
             }
-            
+            if (keyState.IsKeyDown(Keys.D8) && !heldDown.Contains(Keys.D8))
+            {
+                heldDown.Add(Keys.D8);
+                maxLights += 200;
+                generateLights();
+                
+            }
+
+            if (keyState.IsKeyDown(Keys.D7) && !heldDown.Contains(Keys.D7))
+            {
+                heldDown.Add(Keys.D7);
+                if(maxLights >=400)
+                    maxLights -= 200;
+                
+                generateLights();
+
+            }
+            if (keyState.IsKeyDown(Keys.D1) && !heldDown.Contains(Keys.D1))
+            {
+                heldDown.Add(Keys.D1);
+                camera.mouseLocked = !camera.mouseLocked;
+                if(camera.mouseLocked)
+                {
+                    System.Windows.Forms.Cursor.Position = camera.center;
+                }
+                else
+                {
+                    camera.mouseDelta = Vector2.Zero;
+                }
+
+            }
             if (keyState.IsKeyDown(Keys.N) && !heldDown.Contains(Keys.N))
             {
                 heldDown.Add(Keys.N);
@@ -579,32 +609,61 @@ namespace DeferredLightingExample
             lightTarget = new RenderTarget2D(GraphicsDevice, screenWidth, screenHeight, false, SurfaceFormat.HalfVector4, DepthFormat.Depth24Stencil8);
         }
         float timeL = 0f;
-        void updatePointLights(float deltaTime)
+        void updateLights(float deltaTime)
         {
-            timeL += deltaTime;
-            for (int i = 0; i < maxPointLights; i++)
+            timeL += deltaTime  * .5f;
+            for (int i = 0; i < maxLights; i++)
             {
-                lights[i].position = new Vector3(MathF.Sin(timeL + offsetT[i]) * offsetR[i], 4, MathF.Cos(timeL + offsetT[i]) * offsetR[i]);
+                var x = offsetX[i] + MathF.Sin(timeL + offsetT[i]) * offsetR[i];
+                var z = offsetZ[i] + MathF.Cos(timeL + offsetT[i]) * offsetR[i];
+                if (i%2 == 0)
+                    lights[i].position = new Vector3(x, 4 + offsetY[i], z);
+                else
+                    lights[i].position = new Vector3(z, 4 + offsetY[i], x);
             }
         }
         
         List<int> offsetR = new List<int>();
         List<float> offsetT = new List<float>();
+        List<float> offsetX = new List<float>();
+        List<float> offsetZ = new List<float>();
+        List<float> offsetY = new List<float>();
+
         List<LightVolume> lights = new List<LightVolume>();
-        void generatePointLights()
+        void generateLights()
         {
-            var random = new Random();  
-            for(int i = 0; i < maxPointLights; i++)
+            foreach(var l in lights)
             {
-                offsetR.Add((int)random.NextInt64(-300, 300));
+                lightsManager.destroy(l);
+            }
+            lights.Clear();
+            var random = new Random();  
+            for(int i = 0; i < maxLights; i++)
+            {
+                offsetR.Add((int)random.NextInt64(-50, 50));
                 offsetT.Add((float) random.NextDouble() * 50);
+                offsetX.Add((float)random.NextDouble() * 1000);
+                offsetZ.Add((float)random.NextDouble() * 1000);
 
                 var randomColor = new Vector3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble());
                 while(randomColor == Vector3.Zero || randomColor ==  Vector3.One)
                 {
                     randomColor = new Vector3(random.NextInt64(0, 2), random.NextInt64(0, 2), random.NextInt64(0, 2));
                 }
-                var light = new PointLight(Vector3.Zero, 15f, randomColor, randomColor);
+                LightVolume light;
+
+                //fix orientation of conelights
+                //if (i % 3 == 0)
+                //{
+                //    var yaw = (float)random.NextDouble() * MathHelper.TwoPi;
+                //    light = new ConeLight(Vector3.Zero, 15f, yaw, 0f, MathHelper.PiOver2, randomColor, randomColor);
+                //    offsetY.Add(-3.5f);
+                //}
+                //else
+                //{
+                    light = new PointLight(Vector3.Zero, 15f, randomColor, randomColor);
+                    offsetY.Add(0f);
+                //}
                 lightsManager.register(light);
                 lights.Add(light);
                 light.hasLightGeo = true;

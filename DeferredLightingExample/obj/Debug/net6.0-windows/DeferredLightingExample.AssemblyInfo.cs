@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DeferredLightingExample")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+82a3a71dd015058be66ff37cd2b09db05dfd3db7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a4b7382289302f72fc90b4c2c4111ae108ada60d")]
 [assembly: System.Reflection.AssemblyProductAttribute("DeferredLightingExample")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DeferredLightingExample")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

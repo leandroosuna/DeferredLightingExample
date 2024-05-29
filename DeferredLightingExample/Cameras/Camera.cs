@@ -27,13 +27,13 @@ namespace DeferredLightingExample.Cameras
 
         public float yaw;
         public float pitch;
-        bool mouseLocked = true;
-        Vector2 mouseDelta;
+        public bool mouseLocked = true;
+        public Vector2 mouseDelta;
         float mouseSensitivity = .5f;
         float mouseSensAdapt = .06f;
-        System.Drawing.Point center;
+        public System.Drawing.Point center;
 
-        public float moveSpeed = 5f;
+        public float moveSpeed = 30f;
         
         public BoundingFrustum frustum;
 
@@ -81,6 +81,8 @@ namespace DeferredLightingExample.Cameras
         Vector2 delta;
         public void updateMousePositionDelta()
         {
+            if (!mouseLocked)
+                return;
             mousePosition.X = System.Windows.Forms.Cursor.Position.X;
             mousePosition.Y = System.Windows.Forms.Cursor.Position.Y;
 
@@ -88,8 +90,8 @@ namespace DeferredLightingExample.Cameras
             delta.Y = mousePosition.Y - center.Y;
 
             mouseDelta = delta * mouseSensitivity * mouseSensAdapt;
-            if (mouseLocked)
-                System.Windows.Forms.Cursor.Position = center;
+            
+            System.Windows.Forms.Cursor.Position = center;
         }
         void updateKeys(float deltaTime)
         {
@@ -102,7 +104,7 @@ namespace DeferredLightingExample.Cameras
             
             var speed = moveSpeed;
             if (keyState.IsKeyDown(Keys.LeftShift))
-                speed *= 3f;
+                speed *= 1/3f;
 
             if (keyState.IsKeyDown(Keys.W))
             {
